@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Kai Ahnung – Personaleinsatzplanung</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f7f7f7;
+    }
+    h1, h2 {
+      color: #2c3e50;
+    }
+    .section {
+      margin-top: 2rem;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 1rem;
+      background: white;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: center;
+    }
+    th {
+      background-color: #e0e0e0;
+    }
+    .hidden {
+      display: none;
+    }
+    input[type="date"] {
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+    button {
+      padding: 0.4rem 0.8rem;
+      font-size: 1rem;
+      margin-left: 0.5rem;
+    }
+    .nav-buttons {
+      margin-top: 1rem;
+    }
+    .warning {
+      color: red;
+      font-weight: bold;
+      margin-top: 1rem;
+    }
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .home-button {
+      font-size: 1.5rem;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <h1>Kai Ahnung – Personaleinsatzplanung</h1>
+    <a href="#" class="home-button" title="Zur Startseite">🏠</a>
+  </div>
+
+  <div class="section">
+    <label for="einsatzdatum">Datum wählen:</label>
+    <input type="date" id="einsatzdatum">
+    <button onclick="zeigePlanung()">Planung anzeigen</button>
+  </div>
+
+  <div class="nav-buttons hidden" id="navigation">
+    <button onclick="wechselTag(-1)">⬅️ Vortag</button>
+    <button onclick="wechselTag(1)">Nächster Tag ➡️</button>
+  </div>
+
+  <div class="section hidden" id="planung">
+    <h2>Planung für <span id="ausgewähltesDatum"></span></h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Mitarbeiter</th>
+          <th>Frühschicht</th>
+          <th>Mittelschicht</th>
+          <th>Spätschicht</th>
+        </tr>
+      </thead>
+      <tbody id="planungstabelle">
+        <!-- Dynamisch -->
+      </tbody>
+    </table>
+    <div id="warnung" class="warning hidden">Die Schicht ist schon voll!</div>
+  </div>
+
+  <script>
+    const mitarbeiter = ["Anna", "Ben", "Carla", "David", "Elena"];
+
+    // Datum initial auf heute setzen
+    const heute = new Date();
+    document.getElementById("einsatzdatum").valueAsDate = heute;
+
+    function getDatum() {
+      return new Date(document.getElementById("einsatzdatum").value);
+    }
+
+    function zeigePlanung() {
+      const datum = getDatum();
+      const datumString = datum.toISOString().split('T')[0];
+      document.getElementById("ausgewähltesDatum").innerText = datumString;
+
+      const tbody = document.getElementById("planungstabelle");
+      tbody.innerHTML = "";
+
+      // Für jede Zeile (Mitarbeiter)
+      mitarbeiter.forEach((name, rowIdx) => {
+        const row = document.createElement("tr");
+
+        const tdName = document.createElement("td");
+        tdName.innerText = name;
+        row.appendChild(tdName);
+
+        // 3 Schichten
+        ["frueh", "mittel", "spaet"].forEach(schicht => {
+          const td = document.createElement("td");
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.dataset.schicht = schicht;
+          cb.dataset.name = name;
+
+          cb.addEventListener("change", function () {
+            const alleCheckboxen = document.querySelectorAll(`input[data-schicht='${schicht}']`);
+            const aktiv = Array.from(alleCheckboxen).filter(c => c.checked).length;
+
+            if (aktiv > 3) {
+              this.checked = false;
+              zeigeWarnung();
+            } else {
+              versteckeWarnung();
+            }
+          });
+
+          td.appendChild(cb);
+          row.appendChild(td);
+        });
+
+        tbody.appendChild(row);
+      });
+
+      document.getElementById("planung").classList.remove("hidden");
+      document.getElementById("navigation").classList.remove("hidden");
+    }
+
+    function zeigeWarnung() {
+      document.getElementById("warnung").classList.remove("hidden");
+    }
+
+    function versteckeWarnung() {
+      document.getElementById("warnung").classList.add("hidden");
+    }
+
+    function wechselTag(richtung) {
+      const feld = document.getElementById("einsatzdatum");
+      let aktuellesDatum = getDatum();
+      aktuellesDatum.setDate(aktuellesDatum.getDate() + richtung);
+      feld.valueAsDate = aktuellesDatum;
+      zeigePlanung();
+    }
+  </script>
+
+</body>
+</html>
